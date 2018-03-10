@@ -1,0 +1,106 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <style type="text/css">
+        #imgs {
+            width: 60%;
+            margin: auto 20%;
+        }
+
+        #imgs p{
+            margin: 10px;
+            float: right;
+            background-image: url("/image/redfork.jpg");
+        }
+
+        img {
+            width: 200px;
+            height: 200px;
+        }
+        .opacity-black { width: 200px; height: 200px; background-color: #000; }
+        .opacity-black img{ transition: opacity .5s; }
+    </style>
+    <script type="text/javascript" src="jquery-3.3.1.js"></script>
+</head>
+
+<body>
+<div id="imgs"></div>
+<div style="margin: auto 20%" align="center">
+    <button onclick="process()">下一批</button>
+</div>
+
+</body>
+
+<script type="text/javascript">
+    //ajax获取后台数据，动态渲染到页面
+    function render(){
+        $.ajax({
+            type:"GET",
+            url: "http://"+window.location.host+"/servlet",
+            success: function(res){
+                //动态渲染到页面
+
+                var json = eval(res)
+                // for (var i = JsonArray.length - 1; i >= 0; i--) {
+                //     $("#imgs").remove();//先清空
+                //     $("#imgs").html()//再重新渲染
+                // }
+                for(var i=json.length-1;i>=0;i--){
+                    $("#imgs").append(
+                        $("<p>").addClass("opacity-black").append($("<img>").attr({src:json[i].imgUrl , id :json[i].id}))
+                    );
+
+                }
+
+            }
+        });
+    }
+
+    //将处理的数据发送到后台，并重新渲染页面
+    function process(){
+        sendJson();
+        $("#imgs").html("");
+        //重新渲染页面
+        render();
+    }
+
+    function sendJson() {
+        var jsonStr = null;
+        var array = [];
+        for (var i=0;i<=$("#imgs img").length-1;i++){
+            var imgObj = {};
+            imgObj.id = $("#imgs img")[i].id;
+            imgObj.tag = ($($("#imgs img")[i]).attr("status") == 1)? "false" : "true";
+            array[i] = imgObj;
+        }
+        var jsonStr = JSON.stringify(array);
+        $.ajax({
+            type: "POST",
+            url: "http://"+window.location.host+"/receiveServlet",
+            data: jsonStr,
+            async:false,
+            success: function (res) {
+
+            }
+        });
+    }
+
+        $(function(){
+            render();
+        })
+
+    $("#imgs").on("click","p img",function(e){
+        var el = $(e.currentTarget);
+        if (el.attr("status")) {
+            el.css("opacity","1");
+            el.attr("status", "")
+        } else {
+            el.css("opacity","0.4");
+            el.attr("status", "1");
+        }
+    })
+
+</script>
+
+</html>
